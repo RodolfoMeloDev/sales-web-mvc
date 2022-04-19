@@ -28,7 +28,8 @@ namespace SalesWebMVC
             services.AddControllersWithViews();
 
             services.AddDbContext<SalesWebMvcContext>(options =>
-                    options.UseNpgsql(Configuration.GetConnectionString("SalesWebMvcContext")));
+                    options.UseNpgsql(Configuration.GetConnectionString("SalesWebMvcContext"), 
+                                      builder => builder.MigrationsAssembly("SalesWebMVC")));
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
