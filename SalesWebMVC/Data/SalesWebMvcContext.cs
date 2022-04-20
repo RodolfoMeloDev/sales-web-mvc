@@ -14,6 +14,35 @@ namespace SalesWebMvc.Data
         {
         }
 
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.HasSequence<int>("SEQ_Department")
+                    .StartsAt(5)
+                    .IncrementsBy(1);
+
+            modelBuilder.Entity<Department>()
+                        .Property(o => o.Id)
+                        .HasDefaultValueSql("nextval('\"SEQ_Department\"')");
+
+            modelBuilder.HasSequence<int>("SEQ_Seller")
+                    .StartsAt(7)
+                    .IncrementsBy(1);
+
+            modelBuilder.Entity<Seller>()
+                        .Property(o => o.Id)
+                        .HasDefaultValueSql("nextval('\"SEQ_Seller\"')");
+
+            modelBuilder.HasSequence<int>("SEQ_SaleRecord")
+                    .StartsAt(7)
+                    .IncrementsBy(1);
+
+            modelBuilder.Entity<SalesRecord>()
+                        .Property(o => o.Id)
+                        .HasDefaultValueSql("nextval('\"SEQ_SaleRecord\"')");
+
+
+        }
+
         public DbSet<Department> Department { get; set; }
         public DbSet<Seller> Seller { get; set; }
         public DbSet<SalesRecord> SalesRecord { get; set; }
