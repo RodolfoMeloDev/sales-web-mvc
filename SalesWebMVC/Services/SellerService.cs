@@ -2,10 +2,8 @@
 using SalesWebMvc.Data;
 using SalesWebMVC.Models;
 using SalesWebMVC.Services.Exceptions;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 
 namespace SalesWebMVC.Services
 {
@@ -45,7 +43,7 @@ namespace SalesWebMVC.Services
         {
             if (!_context.Seller.Any(x => x.Id == seller.Id))
             {
-                throw new NotFoundException("Id not found");
+                throw new NotFoundException("Id não encontrado");
             }
 
             try

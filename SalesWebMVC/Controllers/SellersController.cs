@@ -118,7 +118,7 @@ namespace SalesWebMVC.Controllers
         {
             if (id == null)
             {
-                message = "Id not provided";
+                message = "Id não informado";
                 return null;
             }
 
@@ -126,7 +126,7 @@ namespace SalesWebMVC.Controllers
 
             if (obj == null)
             {
-                message = "Id not found";
+                message = "Id não encontrado";
                 return null;
             }
 
