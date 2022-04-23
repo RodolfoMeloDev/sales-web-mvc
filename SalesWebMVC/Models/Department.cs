@@ -8,6 +8,8 @@ namespace SalesWebMVC.Models
     public class Department
     {
         public int Id { get; set; }
+        [Required(ErrorMessage ="{0} é obrigatório")]
+        [StringLength(60, MinimumLength = 3, ErrorMessage = "{0} deve ter no mínimo {2} e no máxima {1} caracteres")]
         [Display(Name = "Nome")]
         public string  Name { get; set; }
         public ICollection<Seller> Sellers { get; set; }  = new List<Seller>();

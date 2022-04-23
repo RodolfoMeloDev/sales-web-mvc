@@ -36,7 +36,9 @@ namespace SalesWebMVC.Migrations
                         .HasDefaultValueSql("nextval('\"SEQ_Department\"')");
 
                     b.Property<string>("Name")
-                        .HasColumnType("text");
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.HasKey("Id");
 
@@ -79,17 +81,20 @@ namespace SalesWebMVC.Migrations
                     b.Property<double>("BaseSalary")
                         .HasColumnType("double precision");
 
-                    b.Property<DateTime>("BithDate")
+                    b.Property<DateTime>("BirthDate")
                         .HasColumnType("timestamp without time zone");
 
                     b.Property<int>("DepartmentId")
                         .HasColumnType("integer");
 
                     b.Property<string>("Email")
+                        .IsRequired()
                         .HasColumnType("text");
 
                     b.Property<string>("Name")
-                        .HasColumnType("text");
+                        .IsRequired()
+                        .HasMaxLength(60)
+                        .HasColumnType("character varying(60)");
 
                     b.HasKey("Id");
 
