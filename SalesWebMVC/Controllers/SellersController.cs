@@ -6,6 +6,7 @@ using SalesWebMVC.Services.Exceptions;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Threading.Tasks;
 
 namespace SalesWebMVC.Controllers
 {
@@ -20,16 +21,16 @@ namespace SalesWebMVC.Controllers
             _departmentService = departmentService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            var list = _sellerService.FindAll();
+            var list = await _sellerService.FindAllAsync();
 
             return View(list);
         }
 
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
-            var departments = _departmentService.FindAll();
+            var departments = await _departmentService.FindAllAsync();
             var viewModel = new SellerFormViewModel(departments);
 
             return View(viewModel);
@@ -37,28 +38,32 @@ namespace SalesWebMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Create(Seller seller)
+        public async Task<IActionResult> Create(Seller seller)
         {
             if (!ModelState.IsValid)
             {
-                var departments = _departmentService.FindAll();
+                var departments = await _departmentService.FindAllAsync();
                 var viewModel = new SellerFormViewModel(seller, departments);
                 return View(viewModel);
             }
 
-            _sellerService.Insert(seller);
+            await _sellerService.InsertAsync(seller);
 
             return RedirectToAction(nameof(Index));
         }
 
-        public IActionResult Delete(int? id)
+        public async Task<IActionResult> Delete(int? id)
         {
-            string message;
-            var obj = ReturnSeller(id, out message);
+            if (id == null)
+            {
+                return RedirectToAction(nameof(Error), new { message = "Id não informado" });
+            }
+
+            var obj = await _sellerService.FindByIdAsync(id.Value);
 
             if (obj == null)
             {
-                return RedirectToAction(nameof(Error), new { message = message });
+                return RedirectToAction(nameof(Error), new { message = "Id não encontrado" });
             }
 
             return View(obj);
@@ -66,36 +71,44 @@ namespace SalesWebMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            _sellerService.Remove(id);
+            await _sellerService.RemoveAsync(id);
             return RedirectToAction(nameof(Index));
         }
 
-        public IActionResult Details(int? id)
+        public async Task<IActionResult> Details(int? id)
         {
-            string message;
-            var obj = ReturnSeller(id, out message);
+            if (id == null)
+            {
+                return RedirectToAction(nameof(Error), new { message = "Id não informado" });
+            }
+
+            var obj = await _sellerService.FindByIdAsync(id.Value);
 
             if (obj == null)
             {
-                return RedirectToAction(nameof(Error), new { message = message });
+                return RedirectToAction(nameof(Error), new { message = "Id não encontrado" });
             }
 
             return View(obj);
         }
 
-        public IActionResult Edit(int? id)
+        public async Task<IActionResult> Edit(int? id)
         {
-            string message;
-            var obj = ReturnSeller(id, out message);
+            if (id == null)
+            {
+                return RedirectToAction(nameof(Error), new { message = "Id não informado" });
+            }
+
+            var obj = await _sellerService.FindByIdAsync(id.Value);
 
             if (obj == null)
             {
-                return RedirectToAction(nameof(Error), new { message = message });
+                return RedirectToAction(nameof(Error), new { message = "Id não encontrado" });
             }
 
-            List<Department> departmens = _departmentService.FindAll();
+            List<Department> departmens = await _departmentService.FindAllAsync();
             SellerFormViewModel viewModel = new SellerFormViewModel(obj, departmens);
 
             return View(viewModel);
@@ -103,49 +116,29 @@ namespace SalesWebMVC.Controllers
 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public IActionResult Edit(int id, Seller seller)
+        public async Task<IActionResult> Edit(int id, Seller seller)
         {
             if (!ModelState.IsValid)
             {
-                var departments = _departmentService.FindAll();
+                var departments = await _departmentService.FindAllAsync();
                 var viewModel = new SellerFormViewModel(seller, departments);
                 return View(viewModel);
             }
 
             if(id != seller.Id)
             {
-                return RedirectToAction(nameof(Error), new { message = "Id mismatch" });
+                return RedirectToAction(nameof(Error), new { message = "Id incompatível" });
             }
 
             try
             {
-                _sellerService.Update(seller);
+                await _sellerService.UpdateAsync(seller);
                 return RedirectToAction(nameof(Index));
             }
             catch(ApplicationException e)
             {
                 return RedirectToAction(nameof(Error), new { message = e.Message });
             }
-        }
-
-        private Seller ReturnSeller(int? id, out string message)
-        {
-            if (id == null)
-            {
-                message = "Id não informado";
-                return null;
-            }
-
-            var obj = _sellerService.FindById(id.Value);
-
-            if (obj == null)
-            {
-                message = "Id não encontrado";
-                return null;
-            }
-
-            message = "";
-            return obj;
         }
 
         public IActionResult Error(string message)
