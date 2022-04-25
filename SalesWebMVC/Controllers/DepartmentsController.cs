@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 using SalesWebMVC.Models;
 using SalesWebMvc.Data;
+using SalesWebMVC.Models.ViewModels;
+using System.Diagnostics;
 
 namespace SalesWebMVC.Controllers
 {
@@ -139,15 +141,32 @@ namespace SalesWebMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(int id)
         {
-            var department = await _context.Department.FindAsync(id);
-            _context.Department.Remove(department);
-            await _context.SaveChangesAsync();
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                var department = await _context.Department.FindAsync(id);
+                _context.Department.Remove(department);
+                await _context.SaveChangesAsync();
+                return RedirectToAction(nameof(Index));
+            }catch(DbUpdateException)
+            {
+                return RedirectToAction(nameof(Error), new { message = "Não é possível excluir o departamento, existe(m) vendedor(es) vinculado(s)." });
+            }
         }
 
         private bool DepartmentExists(int id)
         {
             return _context.Department.Any(e => e.Id == id);
+        }
+
+        public IActionResult Error(string message)
+        {
+            var viewModel = new ErrorViewModel
+            {
+                Message = message,
+                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
+            };
+
+            return View(viewModel);
         }
     }
 }

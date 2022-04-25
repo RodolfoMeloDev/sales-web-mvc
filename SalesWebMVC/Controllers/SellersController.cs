@@ -73,8 +73,15 @@ namespace SalesWebMVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {
-            await _sellerService.RemoveAsync(id);
-            return RedirectToAction(nameof(Index));
+            try
+            {
+                await _sellerService.RemoveAsync(id);
+                return RedirectToAction(nameof(Index));
+            }
+            catch (IntegrityException e)
+            {
+                return RedirectToAction(nameof(Error), new { message = e.Message });
+            }
         }
 
         public async Task<IActionResult> Details(int? id)
@@ -125,7 +132,7 @@ namespace SalesWebMVC.Controllers
                 return View(viewModel);
             }
 
-            if(id != seller.Id)
+            if (id != seller.Id)
             {
                 return RedirectToAction(nameof(Error), new { message = "Id incompatível" });
             }
@@ -135,7 +142,7 @@ namespace SalesWebMVC.Controllers
                 await _sellerService.UpdateAsync(seller);
                 return RedirectToAction(nameof(Index));
             }
-            catch(ApplicationException e)
+            catch (ApplicationException e)
             {
                 return RedirectToAction(nameof(Error), new { message = e.Message });
             }
