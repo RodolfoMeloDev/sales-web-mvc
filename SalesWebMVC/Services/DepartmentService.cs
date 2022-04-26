@@ -35,9 +35,16 @@ namespace SalesWebMVC.Services
 
         public async Task RemoveAsync(int id)
         {
-            var obj = await _context.Department.FindAsync(id);
-            _context.Department.Remove(obj);
-            await _context.SaveChangesAsync();
+            try
+            {
+                var obj = await _context.Department.FindAsync(id);
+                _context.Department.Remove(obj);
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException e)
+            {
+                throw new IntegrityException("Não é possível excluir o departamento, pois ele tem vendedor(es) vinculado(s)");
+            }
         }
 
         public async Task UpdateAsync(Department department)
