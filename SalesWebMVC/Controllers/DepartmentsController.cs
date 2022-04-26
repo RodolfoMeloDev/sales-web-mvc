@@ -9,22 +9,25 @@ using SalesWebMVC.Models;
 using SalesWebMvc.Data;
 using SalesWebMVC.Models.ViewModels;
 using System.Diagnostics;
+using SalesWebMVC.Services;
+using SalesWebMVC.Services.Exceptions;
 
 namespace SalesWebMVC.Controllers
 {
     public class DepartmentsController : Controller
     {
-        private readonly SalesWebMvcContext _context;
+        private readonly DepartmentService _departmentService;
 
-        public DepartmentsController(SalesWebMvcContext context)
+        public DepartmentsController(DepartmentService departmentService)
         {
-            _context = context;
+            _departmentService = departmentService;
         }
 
         // GET: Departments
         public async Task<IActionResult> Index()
         {
-            return View(await _context.Department.ToListAsync());
+            var list = await _departmentService.FindAllAsync();
+            return View(list);
         }
 
         // GET: Departments/Details/5
@@ -32,14 +35,14 @@ namespace SalesWebMVC.Controllers
         {
             if (id == null)
             {
-                return NotFound();
+                return RedirectToAction(nameof(Error), new { message = "Id não informado" });
             }
 
-            var department = await _context.Department
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var department = await _departmentService.FindByIdAsync(id.Value);
+
             if (department == null)
             {
-                return NotFound();
+                return RedirectToAction(nameof(Error), new { message = "Id não encontrado" });
             }
 
             return View(department);
@@ -56,15 +59,18 @@ namespace SalesWebMVC.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("Id,Name")] Department department)
+        //public async Task<IActionResult> Create([Bind("Id,Name")] Department department)
+        public async Task<IActionResult> Create(Department department)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                _context.Add(department);
-                await _context.SaveChangesAsync();
-                return RedirectToAction(nameof(Index));
+                var viewModel = await _departmentService.FindAllAsync();
+                return View(viewModel);
             }
-            return View(department);
+
+            await _departmentService.InsertAsync(department);
+
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Departments/Edit/5
@@ -72,14 +78,15 @@ namespace SalesWebMVC.Controllers
         {
             if (id == null)
             {
-                return NotFound();
+                return RedirectToAction(nameof(Error), new { message = "Id não informado" });
             }
 
-            var department = await _context.Department.FindAsync(id);
+            var department = await _departmentService.FindByIdAsync(id.Value);
             if (department == null)
             {
-                return NotFound();
+                return RedirectToAction(nameof(Error), new { message = "Id não encontrado" });
             }
+
             return View(department);
         }
 
@@ -88,34 +95,28 @@ namespace SalesWebMVC.Controllers
         // For more details, see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("Id,Name")] Department department)
+        public async Task<IActionResult> Edit(int id, Department department)
         {
-            if (id != department.Id)
+            if (!ModelState.IsValid)
             {
-                return NotFound();
+                var viewModel = await _departmentService.FindAllAsync();
+                return View(viewModel);
             }
 
-            if (ModelState.IsValid)
+            if (id != department.Id)
             {
-                try
-                {
-                    _context.Update(department);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!DepartmentExists(department.Id))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
+                return RedirectToAction(nameof(Error), new { message = "Id incompatível" });
+            }
+
+            try
+            {
+                await _departmentService.UpdateAsync(department);
                 return RedirectToAction(nameof(Index));
             }
-            return View(department);
+            catch (ApplicationException e)
+            {
+                return RedirectToAction(nameof(Error), new { message = e.Message });
+            }
         }
 
         // GET: Departments/Delete/5
@@ -123,14 +124,13 @@ namespace SalesWebMVC.Controllers
         {
             if (id == null)
             {
-                return NotFound();
+                return RedirectToAction(nameof(Error), new { message = "Id não informado" });
             }
 
-            var department = await _context.Department
-                .FirstOrDefaultAsync(m => m.Id == id);
+            var department = await _departmentService.FindByIdAsync(id.Value);
             if (department == null)
             {
-                return NotFound();
+                return RedirectToAction(nameof(Error), new { message = "Id não encontrado" });
             }
 
             return View(department);
@@ -143,20 +143,14 @@ namespace SalesWebMVC.Controllers
         {
             try
             {
-                var department = await _context.Department.FindAsync(id);
-                _context.Department.Remove(department);
-                await _context.SaveChangesAsync();
+                await _departmentService.RemoveAsync(id);
                 return RedirectToAction(nameof(Index));
-            }catch(DbUpdateException)
-            {
-                return RedirectToAction(nameof(Error), new { message = "Não é possível excluir o departamento, existe(m) vendedor(es) vinculado(s)." });
             }
-        }
-
-        private bool DepartmentExists(int id)
-        {
-            return _context.Department.Any(e => e.Id == id);
-        }
+            catch (IntegrityException e)
+            {
+                return RedirectToAction(nameof(Error), new { message = e.Message });
+            }
+        }        
 
         public IActionResult Error(string message)
         {
