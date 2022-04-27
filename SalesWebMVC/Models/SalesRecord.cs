@@ -30,6 +30,7 @@ namespace SalesWebMVC.Models
             Amount = amout;
             Status = status;
             Seller = seller;
+            SellerId = Id;
         }
     }
 }

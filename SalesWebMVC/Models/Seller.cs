@@ -51,6 +51,7 @@ namespace SalesWebMVC.Models
             BirthDate = birthDate;
             BaseSalary = baseSalary;
             Department = department;
+            DepartmentId = Id;
         }
 
         public void AddSales(SalesRecord sr)
